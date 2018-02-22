@@ -8,10 +8,11 @@ public class SplayTree <T extends Comparable<T>> {
 	
 	/**
 	 * @param index - of the node to search for.
-	 * @return  - null if index<0 or index>=size otherwise SubTree at index. 
+	 * @return  - null if index<=0 or index>=size otherwise SubTree at index. 
 	 */
 	public T get(long index) {
 		SplaySubTree<T> cT = root.get(index);
+		if(cT==null)return null;
 		cT.splay();
 		root = cT;
 		return cT.getData();
@@ -28,8 +29,49 @@ public class SplayTree <T extends Comparable<T>> {
 	 *         
 	 */
 	public long indexOf(T node) {
-		return root.indexOf(node);
+		long index = root.indexOf(node);
+		get(index);
+		return index;
 	}
 	
+	/**
+	 * @param node - is added to the tree.
+	 *             If node is null tree is unchanged.
+	 */
+	public void add(T node) {
+		root = root.add(node);
+	}
+	
+	/**
+	 * @param node - is removed from the tree.
+	 *             If node is null tree is unchanged.
+	 */
+	public void remove(T node) {
+		root = root.remove(node);
+	}
+	
+	/**
+	 * @param node
+	 * @return
+	 */
+	public boolean contains(T node) {
+		SplaySubTree<T> temp = root.find(node);
+		if(temp!=null){
+			temp.splay();
+			root = temp;
+		}
+		return temp != null;
+	}
+	
+	@Override
+	public String toString(){
+		return root.toString();
+	}
 
+	public static void main(String[] args) {
+		SplayTree<Integer> test = new SplayTree<Integer>();
+		test.add(1);
+		test.add(2);
+		System.out.println(test);
+	}
 }

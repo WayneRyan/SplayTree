@@ -14,10 +14,28 @@ public class SplaySubTree<T extends Comparable<T>> {
 		if (node == null) size = 0;
 		else size = 1;
 	}
+	
+	public String toString(){
+		String lft = "";
+		String rght = "";
+		String myData = ""+data;
+		if(left!=null){
+			myData += " left="+ left.data;
+			lft = left.toString();
+		}else lft = "null";
+		if(right!=null){
+			myData += " right="+ right.data;
+			rght = right.toString();
+		}else rght = "null";
+		
+		return myData + "\n" + lft + rght;
+	}
+	
+	public T getData() {return data;}
 
 	/**
 	 * @param index - of the node to search for.
-	 * @return  - null if index<0 or index>=size otherwise SubTree at index. 
+	 * @return  - null if index<=0 or index>=size otherwise SubTree at index. 
 	 */
 	public SplaySubTree<T> get(long index) {
 		if (index > size || index < 0) return null;
@@ -28,11 +46,11 @@ public class SplaySubTree<T extends Comparable<T>> {
 			if(cS>index){
 				cS--;
 				cT = cT.left;
-				if(cT.right!=null)cS-= cT.right.size;
+				if(cT!=null && cT.right!=null)cS-= cT.right.size;
 			}else{
 				cS++;
 				cT = cT.right;
-				if(cT.left!=null)cS += cT.left.size;
+				if(cT!=null && cT.left!=null)cS += cT.left.size;
 			}
 		}
 		return cT;
@@ -54,17 +72,18 @@ public class SplaySubTree<T extends Comparable<T>> {
 		SplaySubTree<T> cT= this;
 		if(cT.left!=null)cI +=cT.left.size;
 		while(!cT.data.equals(node)){
-			if(cT==null)return -1;
 			if(cT.data.compareTo(node)>0){
 				cI--;
 				cT = cT.left;
-				if(cT.right!=null)cI-= cT.right.size;
+				if(cT!=null && cT.right!=null)cI-= cT.right.size;
 			}else{
 				cI++;
 				cT = cT.right;
-				if(cT.left!=null)cI += cT.left.size;
+				if(cT!=null && cT.left!=null)cI += cT.left.size;
 			}
+			if(cT==null)return -1;
 		}
+		
 		return cI;
 	}
 
@@ -94,11 +113,12 @@ public class SplaySubTree<T extends Comparable<T>> {
 		}
 
 		SplaySubTree<T> newNode = new SplaySubTree<T>(node);
-		if (current.data.compareTo(node) < 0)
-			current.right = newNode;
-		else
+		if (current.data.compareTo(node) < 0){
+			current.right = newNode;	
+		}else{
 			current.left = newNode;
-
+		}
+		newNode.parent = current;
 		newNode.splay();
 		return newNode;
 	}
@@ -115,19 +135,66 @@ public class SplaySubTree<T extends Comparable<T>> {
 			return this;
 		// To delete a node x:
 		// if x has no children remove it.
+		
 		if (x.left == null && x.right == null) {
-			if (x == this)
-				return null;
-
+			if(x.parent!=null){
+				if(x.parent.left == x){
+					parent.left = null;
+				}else parent.right = null;
+			}else return new SplaySubTree(null);
+			
 		}
 		// if x has one child remove x, and put the child in place of x
-		// if x has two children, swap its value with that of
-		// the rightmost node of its left sub tree
-		// Then remove that node instead.
+		if(x.left==null){
+			if(x.parent!=null){
+				if(x.parent.left == x){
+					parent.left = x.right;
+					x.right.parent = parent;
+					x = x.right;
+				}else{
+					parent.right = x.right;
+					x.right.parent = parent;
+					x = x.right;
+				}
+			}else{
+				x.right.parent = null;
+				return x.right;
+			}
+		}else if(x.right == null){
+			if(x.parent!=null){
+				if(x.parent.left == x){
+					parent.left = x.left;
+					x.left.parent = parent;
+					x = x.left;
+				}else{
+					parent.right = x.left;
+					x.left.parent = parent;
+					x = x.left;
+				}
+			}else{
+				x.left.parent = null;
+				return x.left;
+			}
+		}else{
+			// if x has two children, swap its value with that of
+			// the rightmost node of its left sub tree
+			SplaySubTree<T> rmc = x.left;
+			while(rmc.right!=null)rmc = rmc.right;
+			x.data = rmc.data;
+			// Then remove that node instead.
+			rmc.left.parent = rmc.parent;
+			if(rmc.parent == x){
+				x.left = rmc.left;
+			}else{
+				rmc.parent.right = rmc.left;
+			}
+			x = rmc;
+		}
+		
 		// After deletion, splay the parent of the removed node to the top of
 		// the tree.
-		// p.splay();
-		return null;
+		x.splay();
+		return x;
 	}
 
 	/**
@@ -153,6 +220,7 @@ public class SplaySubTree<T extends Comparable<T>> {
 	 */
 	public SplaySubTree<T> find(T node) {
 		SplaySubTree<T> current = this;
+		if(this.data==null)return null;
 		while (current != null) {
 			if (node.equals(current.data))
 				return current;
@@ -164,13 +232,6 @@ public class SplaySubTree<T extends Comparable<T>> {
 		return current;
 	}
 
-	/**
-	 * @param node
-	 * @return
-	 */
-	public boolean contains(T node) {
-		return find(node) != null;
-	}
 
 	/**
 	 * Assuming this node is an interior or leaf node of a larger tree
@@ -184,7 +245,7 @@ public class SplaySubTree<T extends Comparable<T>> {
 			SplaySubTree<T> g = p.parent;
 			if (g == null && this == p.left) {
 				zig();
-			} else if (g == null && this == p.left) {
+			} else if (g == null && this == p.right) {
 				zag();
 			} else if (p.left == this && g.left == p) {
 				zigzig();
@@ -204,13 +265,18 @@ public class SplaySubTree<T extends Comparable<T>> {
 	private void zig() {
 		SplaySubTree<T> b = this.right;
 		SplaySubTree<T> p = this.parent;
-
+		
+		
 		this.right = p;
 		p.parent = this;
 		p.left = b;
-		b.parent = p;
-		p.size = p.right.size + b.size+1;
-		this.size = p.size + this.left.size+1;
+		if(b!=null)b.parent = p;
+		
+		p.size = 1;
+		if(p.right!=null)p.size+=p.right.size;
+		if(b!=null)p.size+= b.size;
+		this.size = p.size +1;
+		if(this.left!=null)this.size+=this.left.size;
 	}
 
 	/**
@@ -219,12 +285,14 @@ public class SplaySubTree<T extends Comparable<T>> {
 	private void zag() {
 		SplaySubTree<T> b = this.left;
 		SplaySubTree<T> p = this.parent;
-
+		
 		this.left = p;
 		p.parent = this;
 		p.right = b;
-		b.parent = p;
-		p.size = p.left.size + b.size+1;
+		if(b!=null)b.parent = p;
+		
+		if(b!=null)p.size = p.left.size + b.size+1;
+		else p.size = p.left.size +1;
 		this.size = p.size + this.right.size+1;
 	}
 
@@ -274,7 +342,7 @@ public class SplaySubTree<T extends Comparable<T>> {
 		SplaySubTree<T> g = parent.parent;
 		SplaySubTree<T> b = this.left;
 		SplaySubTree<T> p = this.parent;
-		SplaySubTree<T> c = p.right;
+		SplaySubTree<T> c = p.left;
 
 		fixGG(g);
 		b.parent = p;
@@ -308,6 +376,7 @@ public class SplaySubTree<T extends Comparable<T>> {
 		this.left = p;
 		g.parent = this;
 		this.right = g;
+		
 		g.size = g.right.size + c.size+1;
 		p.size = p.left.size + b.size+1;
 		this.size = g.size+p.size+1;
@@ -335,6 +404,5 @@ public class SplaySubTree<T extends Comparable<T>> {
 		this.size = g.size+p.size+1;
 	}
 
-	public T getData() {return data;}
 
 }
