@@ -1,3 +1,4 @@
+import java.util.Arrays;
 
 public class SplayTree <T extends Comparable<T>> {
 	SplaySubTree<T> root;
@@ -70,8 +71,20 @@ public class SplayTree <T extends Comparable<T>> {
 
 	public static void main(String[] args) {
 		SplayTree<Integer> test = new SplayTree<Integer>();
-		test.add(1);
-		test.add(2);
-		System.out.println(test);
+		int howmanynumbers = 10000;
+		for (int i = 0; i < howmanynumbers; i++) {
+			int val = (int)(Math.random()*100);
+//			System.out.print(val + " ");
+//			System.out.println("size=" + test.size());
+			test.add(val);
+		}
+//		System.out.println();
+		
+//		test.add(2);
+//		test.add(3);
+//		test.add(1);
+//		test.add(5);
+		System.out.println(test.size());
+		//System.out.println(test);
 	}
 }
