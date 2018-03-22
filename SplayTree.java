@@ -84,6 +84,9 @@ public class SplayTree <T extends Comparable<T>> {
 //		test.add(3);
 //		test.add(1);
 //		test.add(5);
+		
+		//Hello World
+		
 		System.out.println(test.size());
 		//System.out.println(test);
 	}
